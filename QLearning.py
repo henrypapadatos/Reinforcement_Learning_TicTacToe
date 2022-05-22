@@ -10,7 +10,7 @@ import numpy as np
 import random
 
 class QLearningPlayer():
-    def __init__(self, exploration_level = 0.01, player='X'):
+    def __init__(self, exploration_level = 0.3, player='X'):
         self.states = define_states.define_states_graph()
         self.QValuesX = define_states.initialize_Qvalues(self.states)
         self.QValuesO = define_states.initialize_Qvalues(self.states)
@@ -33,10 +33,12 @@ class QLearningPlayer():
             raise ValueError ("Wrong player type.")
         else:
             self.player = player
+            self.reward = 0
             
     def last_update(self,reward):
         self.reward = reward
         self.update_QValues(0)
+
             
     def update_QValues(self, next_max_QValues):
         
@@ -82,7 +84,7 @@ class QLearningPlayer():
             #find all possible actions
             action = np.where(QValues!=-np.inf)
             
-        #take one possible action randomly among the one we wants
+        #take one possible action randomly among the one we want
         action_idx = random.randint(0, len(action[0])-1)
         
         action = (action[0][action_idx], action[1][action_idx])

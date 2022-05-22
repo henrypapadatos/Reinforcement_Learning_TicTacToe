@@ -9,6 +9,7 @@ import QLearning
 from tic_env import TictactoeEnv, OptimalPlayer
 from time import perf_counter
 
+######PRINT NUMBER OF EQUALITIES DURING TRAINING ##########
 
 def test_policy(Qplayer):
     env = TictactoeEnv()
@@ -33,8 +34,11 @@ def test_policy(Qplayer):
                     move = Qplayer.act(grid)
     
                 grid, end, winner = env.step(move, print_grid=False)
+                #print(winner)
     
                 if end:
+                    #print(grid)
+                    #print("IN END", winner)
                     if winner==Qplayer_sign:
                         nb_win+=1
                     # print('-------------------------------------------')
@@ -45,55 +49,63 @@ def test_policy(Qplayer):
                     env.reset()
                     break
         
-    return nb_win/nb_test_play        
-    
+    return (nb_win/nb_test_play)*100      
+
 t1_start = perf_counter()
 
 
 Qplayer = QLearning.QLearningPlayer()
 
 Turns = np.array(['X','O'])
+
 env = TictactoeEnv()
 
-nb_play = 20000
+nb_eval = 40
 
-for i in range(nb_play):
-    
-    grid, _, __ = env.observe()
-    
-    #pick a player randomly
-    Turns = Turns[np.random.permutation(2)]
-    
-    Qplayer.set_player(player=Turns[0])
-    player_opt = OptimalPlayer(epsilon=0., player=Turns[1])
-    
-    for j in range(9):
-        if env.current_player == player_opt.player:
-            move = player_opt.act(grid)
-        else:
-            move = Qplayer.act(grid, train_mode=True)
+nb_play = 10000
 
-        grid, end, winner = env.step(move, print_grid=False)
-
-        if end:
-            if winner==Qplayer.player:
-                reward = 1
+for k in range(nb_eval):
+    print("EVAL: ", k)
+    for i in range(nb_play):
+        
+        grid, _, __ = env.observe()
+        
+        #pick a player randomly
+        Turns = Turns[np.random.permutation(2)]
+        
+        Qplayer.set_player(player=Turns[0])
+        player_opt = OptimalPlayer(epsilon=0., player=Turns[1])
+        
+        for j in range(9):
+            if env.current_player == player_opt.player:
+                move = player_opt.act(grid)
             else:
-                reward = -1
-                
-            Qplayer.last_update(reward)
-            # print('-------------------------------------------')
-            # print('Game end, winner is player ' + str(winner))
-            # print('Optimal player = ' +  Turns[1])
-            # print('Q player = ' +  Turns[0])
-            # env.render()
-            env.reset()
-            break
-    
-    if not i%1000:
-        print('epoch: '+str(i))
+                move = Qplayer.act(grid, train_mode=True)
 
-print(test_policy(Qplayer))     
+            grid, end, winner = env.step(move, print_grid=False)
+
+            if end:
+                if winner==Qplayer.player:
+                    reward = 1
+                else:
+                    reward = -1
+                    
+                Qplayer.last_update(reward)
+                # print('-------------------------------------------')
+                # print('Game end, winner is player ' + str(winner))
+                # print('Optimal player = ' +  Turns[1])
+                # print('Q player = ' +  Turns[0])
+                # env.render()
+                env.reset()
+                break
+        
+        if not i%1000:
+            print('epoch: '+str(i))
+
+    print("Average reward: {:.01f}".format(test_policy(Qplayer))) 
+    
+
+   
 
 t1_stop = perf_counter()
 d_time = t1_stop-t1_start
