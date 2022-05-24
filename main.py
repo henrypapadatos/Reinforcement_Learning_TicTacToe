@@ -22,12 +22,15 @@ def test_policy(Qplayer):
     
     turns = ['X','O']
     
+    Qplayer.set_exploration_level(0.0)
+
+    
     for idx in range(len(turns)):
         Qplayer_sign = turns[idx]
         player_opt_sign = turns[not idx]
         
         Qplayer.set_player(Qplayer_sign)
-        player_opt = OptimalPlayer(epsilon=0., player=player_opt_sign)
+        player_opt = OptimalPlayer(epsilon=1., player=player_opt_sign)
     
         for i in range(int(nb_test_play/2)):
             grid, _, __ = env.observe()
@@ -38,14 +41,14 @@ def test_policy(Qplayer):
                     move = Qplayer.act(grid)
     
                 grid, end, winner = env.step(move, print_grid=False)
-                #print(winner)
-                
-                
+                                
                 if end:
                     #print(grid)
                     #print("IN END", winner)
-                    if winner==Qplayer_sign:
+                    if winner==Qplayer.player:
                         nb_win+=1
+                    elif winner==player_opt.player:
+                        nb_loss+=1
                     # print('-------------------------------------------')
                     # print('Game end, winner is player ' + str(winner))
                     # print('Optimal player = ' +  Turns[1])
@@ -86,13 +89,13 @@ def test_policy(Qplayer):
     #             env.reset()
     #             break
         
-    # return (nb_win-nb_loss)/nb_test_play     
+    return (nb_win-nb_loss)/nb_test_play     
 
 t1_start = perf_counter()
 
 nb_eval = 40
-nb_play = 10000
-exploration_level = 0.1
+nb_play = 1000
+exploration_level = 0.3
 
 Qplayer = QLearning.QLearningPlayer()
 
@@ -113,7 +116,7 @@ for k in range(nb_eval):
         
         #pick a player randomly
         Turns = Turns[np.random.permutation(2)]
-        # Turns = ['X','O']
+        #Turns = ['X','O']
         
         Qplayer.set_player(player=Turns[0])
         player_opt = OptimalPlayer(epsilon=0., player=Turns[1])
@@ -139,8 +142,6 @@ for k in range(nb_eval):
                 Qplayer.last_update(reward)
                 # print('-------------------------------------------')
                 # print('Game end, winner is player ' + str(winner))
-                # print('Optimal player = ' +  Turns[1])
-                # print('Q player = ' +  Turns[0])
                 # env.render()
                 env.reset()
                 break
@@ -148,7 +149,7 @@ for k in range(nb_eval):
         if not i%1000:
             print('epoch: '+str(i))
 
-    print("Average reward: {:.01f}".format(test_policy(Qplayer))) 
+    print("Average reward: {:.03f}".format(test_policy(Qplayer))) 
     
 
    

@@ -56,13 +56,6 @@ class QLearningPlayer():
         if self.last_state==None:
             return
         
-        # if self.player == 'X':
-        #     QValues=self.QValuesX[self.last_state]
-        # else:
-        #     QValues=self.QValuesO[self.last_state]
-            
-        # QValue=QValues[self.last_action]
-        
         #find Q
         QValue=self.states[self.last_state][self.last_action]
             
@@ -70,11 +63,6 @@ class QLearningPlayer():
         delta_Qvalue = self.lr*(self.reward+self.discount_factor*next_max_QValues-QValue)
         
         self.states[self.last_state][self.last_action] += delta_Qvalue
-        
-        # if self.player == 'X':
-        #     self.QValuesX[self.last_state][self.last_action]+=delta_Qvalue
-        # else:
-        #     self.QValuesO[self.last_state][self.last_action]+=delta_Qvalue
         
         
     def act(self, board, train_mode=False):
@@ -92,14 +80,6 @@ class QLearningPlayer():
         if not key in self.states: self.addBoardToStates(board, key)
         
         QValues = self.states[key]
-        
-        # board = np.reshape(board.copy(), 9).tolist()
-        # state = self.states.index(board)
-        
-        # if self.player == 'X':
-        #     QValues=self.QValuesX[state] 
-        # else:
-        #     QValues=self.QValuesO[state] 
             
         if train_mode:
             #find best QValues to update Qvalues for the last state
@@ -114,7 +94,6 @@ class QLearningPlayer():
         #in this case, we don't explore
         else:
             action = np.where(QValues == np.amax(QValues))
-
             
         #take one possible action randomly among the one we want
         action_idx = random.randint(0, len(action[0])-1)
