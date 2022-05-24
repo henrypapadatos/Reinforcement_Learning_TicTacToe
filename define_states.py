@@ -97,7 +97,7 @@ def initialize_Qvalues(states):
         state = np.reshape(state, (3,3))
         QValue = np.zeros((3,3), dtype='float')
         QValue[state!=0]=-np.inf
-        QValues.append(QValue)
+        QValues.append(QValue.copy())
         
     return QValues
 

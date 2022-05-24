@@ -8,6 +8,9 @@ import numpy as np
 import QLearning
 from tic_env import TictactoeEnv, OptimalPlayer
 from time import perf_counter
+import random
+
+random.seed(10)
 
 ######PRINT NUMBER OF EQUALITIES DURING TRAINING ##########
 
@@ -15,6 +18,7 @@ def test_policy(Qplayer):
     env = TictactoeEnv()
     nb_test_play = 500
     nb_win = 0
+    nb_loss = 0
     
     turns = ['X','O']
     
@@ -35,7 +39,8 @@ def test_policy(Qplayer):
     
                 grid, end, winner = env.step(move, print_grid=False)
                 #print(winner)
-    
+                
+                
                 if end:
                     #print(grid)
                     #print("IN END", winner)
@@ -48,11 +53,46 @@ def test_policy(Qplayer):
                     # env.render()
                     env.reset()
                     break
+
+    # Qplayer.set_player(player = turns[0])
+    # player_opt = OptimalPlayer(epsilon=1., player = turns[1])
+    # Qplayer.set_exploration_level(0.0)
+
+
+    # for i in range(int(nb_test_play)):
+    #     grid, _, __ = env.observe()
+    #     for j in range(9):
+    #         if env.current_player == player_opt.player:
+    #             move = player_opt.act(grid)
+    #         else:
+    #             move = Qplayer.act(grid)
+
+    #         grid, end, winner = env.step(move, print_grid=False)
+    #         #print(winner)
+    #         #env.render()
+            
+    #         if end:
+    #             #print(grid)
+    #             #print("IN END", winner)
+    #             if winner=='X':
+    #                 nb_win+=1
+    #             if winner=='O':
+    #                 nb_loss=0
+    #             # print('-------------------------------------------')
+    #             # print('Game end, winner is player ' + str(winner))
+    #             # print('Optimal player = ' +  Turns[1])
+    #             # print('Q player = ' +  Turns[0])
+    #             # env.render()
+    #             env.reset()
+    #             break
         
-    return (nb_win/nb_test_play)*100      
+    # return (nb_win-nb_loss)/nb_test_play     
 
 t1_start = perf_counter()
 
+nb_eval = 40
+nb_play = 10000
+exploration_level = 0.1
 
 Qplayer = QLearning.QLearningPlayer()
 
@@ -60,18 +100,20 @@ Turns = np.array(['X','O'])
 
 env = TictactoeEnv()
 
-nb_eval = 40
-
-nb_play = 10000
 
 for k in range(nb_eval):
     print("EVAL: ", k)
+    
+    Qplayer.set_exploration_level(exploration_level)
+
+    
     for i in range(nb_play):
         
         grid, _, __ = env.observe()
         
         #pick a player randomly
         Turns = Turns[np.random.permutation(2)]
+        # Turns = ['X','O']
         
         Qplayer.set_player(player=Turns[0])
         player_opt = OptimalPlayer(epsilon=0., player=Turns[1])
@@ -84,11 +126,15 @@ for k in range(nb_eval):
 
             grid, end, winner = env.step(move, print_grid=False)
 
+            # env.render()
+
             if end:
                 if winner==Qplayer.player:
                     reward = 1
-                else:
+                elif winner==player_opt.player:
                     reward = -1
+                else: 
+                    reward = 0
                     
                 Qplayer.last_update(reward)
                 # print('-------------------------------------------')
