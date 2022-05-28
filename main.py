@@ -43,8 +43,6 @@ def test_policy(Qplayer):
                 grid, end, winner = env.step(move, print_grid=False)
                                 
                 if end:
-                    #print(grid)
-                    #print("IN END", winner)
                     if winner==Qplayer.player:
                         nb_win+=1
                     elif winner==player_opt.player:
@@ -57,45 +55,13 @@ def test_policy(Qplayer):
                     env.reset()
                     break
 
-    # Qplayer.set_player(player = turns[0])
-    # player_opt = OptimalPlayer(epsilon=1., player = turns[1])
-    # Qplayer.set_exploration_level(0.0)
-
-
-    # for i in range(int(nb_test_play)):
-    #     grid, _, __ = env.observe()
-    #     for j in range(9):
-    #         if env.current_player == player_opt.player:
-    #             move = player_opt.act(grid)
-    #         else:
-    #             move = Qplayer.act(grid)
-
-    #         grid, end, winner = env.step(move, print_grid=False)
-    #         #print(winner)
-    #         #env.render()
-            
-    #         if end:
-    #             #print(grid)
-    #             #print("IN END", winner)
-    #             if winner=='X':
-    #                 nb_win+=1
-    #             if winner=='O':
-    #                 nb_loss=0
-    #             # print('-------------------------------------------')
-    #             # print('Game end, winner is player ' + str(winner))
-    #             # print('Optimal player = ' +  Turns[1])
-    #             # print('Q player = ' +  Turns[0])
-    #             # env.render()
-    #             env.reset()
-    #             break
-        
     return (nb_win-nb_loss)/nb_test_play     
 
 t1_start = perf_counter()
 
 nb_eval = 40
 nb_play = 1000
-exploration_level = 0.3
+exploration_level = 0.4
 
 Qplayer = QLearning.QLearningPlayer()
 
@@ -119,7 +85,7 @@ for k in range(nb_eval):
         #Turns = ['X','O']
         
         Qplayer.set_player(player=Turns[0])
-        player_opt = OptimalPlayer(epsilon=0., player=Turns[1])
+        player_opt = OptimalPlayer(epsilon=0.5, player=Turns[1])
         
         for j in range(9):
             if env.current_player == player_opt.player:
