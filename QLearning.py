@@ -4,13 +4,12 @@ Created on Fri May 20 14:42:37 2022
 
 @author: henrypapadatos
 """
-
-import define_states
 import numpy as np
 import random
 
 class QLearningPlayer():
-    def __init__(self, exploration_level = 0.3, player='X'):
+    def __init__(self, exploration_level = 0.3, decreasing_exploration_rate= 1, 
+                 decreasing_exploration_flag = False, player='X'):
         self.states={}
         self.exploration_level = exploration_level
         self.reward = 0
@@ -18,7 +17,11 @@ class QLearningPlayer():
         self.last_action = None
         self.lr = 0.05
         self.discount_factor = 0.99
-        self.reward = 0
+        self.epsilon_min = 0.1
+        self.epsilon_max = 0.8
+        self.game_number = 0
+        self.decreasing_exploration_rate = decreasing_exploration_rate
+        self.decreasing_exploration_flag = decreasing_exploration_flag
 
         if (player != 'X') and (player != 'O'):
             raise ValueError ("Wrong player type.")
@@ -31,8 +34,24 @@ class QLearningPlayer():
         else:
             self.player = player
 
+    
+    def set_decreasing_exploration_rate(self, decreasing_exploration_rate):
+        self.decreasing_exploration_rate = decreasing_exploration_rate
+            
     def set_exploration_level(self, exploration_level):
         self.exploration_level = exploration_level
+        
+    def compute_exploration_level(self):
+        """
+        Compute the learning rate in the case of decreasing_exploration_flag=True
+        lr = max(epsilon_min, epsilon_max*(1-game_number/decreasing_exploration_rate))
+     
+        Returns
+        -------
+        None.
+
+        """
+        self.exploration_level = max((self.epsilon_min, self.epsilon_max*(1-self.game_number/self.decreasing_exploration_rate)))
             
     def addBoardToStates(self, board, key):
         
@@ -85,9 +104,13 @@ class QLearningPlayer():
             #find best QValues to update Qvalues for the last state
             max_QValue = np.amax(QValues)
             self.update_QValues(max_QValue)
+            
+        #Compute the exploration_level in the case of decreasing_exploration_flag=True
+        if self.decreasing_exploration_flag:
+            self.compute_exploration_level()
         
         #in this case we explore
-        if random.random()<self.exploration_level:
+        if train_mode and random.random()<self.exploration_level:
             #find all possible actions
             action = np.where(QValues!=-np.inf)
             
@@ -103,6 +126,7 @@ class QLearningPlayer():
         if train_mode:
             self.last_state=key
             self.last_action=action
+            self.game_number+=1
         
         return action
     
