@@ -67,6 +67,66 @@ def test_policy(Qplayer, expert_exploration_level=0):
                 
     return (nb_win-nb_loss)/nb_test_play    
 
+
+def test_self_playing_policy(Qplayer, expert_exploration_level=0):
+    """
+    Compute a metric to asses the performance of our model. 
+
+    Parameters
+    ----------
+    Qplayer : QLearningPlayer
+        Agent that we want to test.
+    expert_exploration_level : int, optional
+        exploration rate that the expert will use. If=0 the expert plays the optimal policy.
+        If=1, the expert plays random moves . The default is 0.
+
+    Returns
+    -------
+    float
+        (#win - #loss)/#game player. If Qplayer is good, this value should be close to 1 
+         if expert_exploration_level = 0 and it should be close to 0 if expert_exploration_level = 1
+
+    """
+    env = TictactoeEnv()
+    nb_test_play = 500
+    nb_win = 0
+    nb_loss = 0
+    
+    turns = ['X','O']
+      
+    for idx in range(len(turns)):
+        Qplayer_sign = turns[idx]
+        player_opt_sign = turns[not idx]
+        
+        player_opt = OptimalPlayer(epsilon=expert_exploration_level, player=player_opt_sign)
+    
+        for i in range(int(nb_test_play/2)):
+            grid, _, __ = env.observe()
+            for j in range(9):
+                if env.current_player == player_opt.player:
+                    move = player_opt.act(grid)
+                else:
+                    move = Qplayer.act(grid, env.current_player)
+    
+                grid, end, winner = env.step(move, print_grid=False)
+                                
+                if end:
+                    if winner==player_opt.player:
+                        nb_loss+=1
+                    # if no one wins
+                    elif winner== None:
+                        pass
+                    else:
+                        nb_win+=1
+                   
+                    env.reset()
+                    break
+                
+    return (nb_win-nb_loss)/nb_test_play    
+
+
+
+
 if __name__ == "__main__": 
     t1_start = perf_counter()
     
@@ -74,10 +134,8 @@ if __name__ == "__main__":
     nb_play = 250
     exploration_level = 0.4
     
-    Qplayer = QLearning.QLearningPlayer(decreasing_exploration_rate=1, decreasing_exploration_flag=True)
-    
-    Turns = np.array(['X','O'])
-    
+    Qplayer = QLearning.QLearningSelf_Player(decreasing_exploration_rate=10000, decreasing_exploration_flag=True)
+        
     env = TictactoeEnv()
     
     
@@ -88,42 +146,31 @@ if __name__ == "__main__":
             
             grid, _, __ = env.observe()
             
-            #pick a player randomly
-            Turns = Turns[np.random.permutation(2)]
-            #Turns = ['X','O']
-            
-            Qplayer.set_player(player=Turns[0])
-            player_opt = OptimalPlayer(epsilon=0.5, player=Turns[1])
-            
             for j in range(9):
-                if env.current_player == player_opt.player:
-                    move = player_opt.act(grid)
-                else:
-                    move = Qplayer.act(grid, train_mode=True)
+                move = Qplayer.act(grid,env.current_player, train_mode=True)
     
                 grid, end, winner = env.step(move, print_grid=False)
     
                 # env.render()
     
                 if end:
-                    if winner==Qplayer.player:
-                        reward = 1
-                    elif winner==player_opt.player:
-                        reward = -1
+                    if winner=='X':
+                        Qplayer.last_update(1,'X')
+                        Qplayer.last_update(-1,'O')
+                    elif winner=='O':
+                        Qplayer.last_update(-1,'X')
+                        Qplayer.last_update(1,'O')
                     else: 
-                        reward = 0
+                        Qplayer.last_update(0,'X')
+                        Qplayer.last_update(0,'O')
                         
-                    Qplayer.last_update(reward)
-                    # print('-------------------------------------------')
-                    # print('Game end, winner is player ' + str(winner))
-                    # env.render()
                     env.reset()
                     break
             
             if not i%1000:
                 print('epoch: '+str(i))
     
-        print("Average reward: {:.03f}".format(test_policy(Qplayer, expert_exploration_level=0))) 
+        print("Average reward: {:.03f}".format(test_self_playing_policy(Qplayer, expert_exploration_level=0))) 
         
     
        
