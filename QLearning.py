@@ -20,7 +20,6 @@ class QLearningPlayer():
         self.discount_factor = 0.99
         self.reward = 0
 
-        
         if (player != 'X') and (player != 'O'):
             raise ValueError ("Wrong player type.")
         else:
@@ -31,6 +30,7 @@ class QLearningPlayer():
             raise ValueError ("Wrong player type.")
         else:
             self.player = player
+
     def set_exploration_level(self, exploration_level):
         self.exploration_level = exploration_level
             
@@ -71,7 +71,7 @@ class QLearningPlayer():
         #Therefore, if it is currently playing O(-1), we invert all the 1 and -1
         #in the board so we come back to a situation where the agent is playing 'X'
         if self.player == 'O':
-          board=board.copy()*-1;
+          board=board.copy()*-1
         
         #transform to board into a key for the state dictionnary
         key = board.tobytes()
