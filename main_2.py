@@ -1,9 +1,9 @@
-import torch
 import numpy as np
 import Deep_QLearning
 from tic_env import TictactoeEnv, OptimalPlayer
 from time import perf_counter
 import random
+import test_functions
 
 random.seed(10)
 
@@ -30,42 +30,45 @@ for k in range(nb_eval):
         grid, _, __ = env.observe()
         
         #pick a player randomly
-        Turns = Turns[np.random.permutation(2)]
+        #Turns = Turns[np.random.permutation(2)]
         #Turns = ['X','O']
+        current_turns = Turns[np.array([k%2, (k+1)%2])]
         
-        DQN_player.set_player(player=Turns[0])
-        player_opt = OptimalPlayer(epsilon=0.5, player=Turns[1])
+        DQN_player.set_player(player=current_turns[0])
+        player_opt = OptimalPlayer(epsilon=0.5, player=current_turns[1])
 
         for j in range(9):
             if env.current_player == player_opt.player:
                 move = player_opt.act(grid)
             else:
-                move = DQN_player.act(grid,reward, train_mode=True)
+                Valid_move_flag, move = DQN_player.act(grid, train_mode=True)
             
-            if env.check_valid(move):
+            #if the move played by our player is not available, 
+            #the game is stopped and the reward=-1
+            if Valid_move_flag:
                 grid, end, winner = env.step(move, print_grid=False)
-                if end:
-                    if winner==DQN_player.player:
-                        reward = 1
-                    elif winner==player_opt.player:
-                        reward = -1
-                    else: 
-                        reward = 0
+                
+                
             else:
-                if winner==DQN_player.player:
-                        reward = -1
-                    
+                reward = -1
                 DQN_player.last_update(reward)
-                # print('-------------------------------------------')
-                # print('Game end, winner is player ' + str(winner))
-                # env.render()
+                env.reset()
+                break
+            
+            if end:
+                if winner==DQN_player.player:
+                    reward = 1
+                elif winner==player_opt.player:
+                    reward = -1
+                else: 
+                    reward = 0
+                DQN_player.last_update(reward)
                 env.reset()
                 break
         
-        if not i%1000:
+        if not i%100:
             print('epoch: '+str(i))
-
-    print("Average reward: {:.03f}".format(test_policy(Qplayer))) 
+    print("Average reward: {:.03f}".format(test_functions.test_DQN_policy(DQN_player))) 
     
 
    
