@@ -9,18 +9,18 @@ random.seed(10)
 
 t1_start = perf_counter()
 
-nb_eval = 40
-nb_play = 1000
-exploration_level = 0.4
+nb_eval = 80
+nb_play = 250
+exploration_level = 0.1
 
-DQN_player = Deep_QLearning.DQN_Player()
+DQN_player = Deep_QLearning.newDQN_Player()
 
 Turns = np.array(['X','O'])
 
 env = TictactoeEnv()
 
 for k in range(nb_eval):
-    print("EVAL: ", k)
+    # print("EVAL: ", k)
     
     DQN_player.set_exploration_level(exploration_level)
 
@@ -32,7 +32,7 @@ for k in range(nb_eval):
         #pick a player randomly
         #Turns = Turns[np.random.permutation(2)]
         #Turns = ['X','O']
-        current_turns = Turns[np.array([k%2, (k+1)%2])]
+        current_turns = Turns[np.array([i%2, (i+1)%2])]
         
         DQN_player.set_player(player=current_turns[0])
         player_opt = OptimalPlayer(epsilon=0.5, player=current_turns[1])
@@ -41,7 +41,7 @@ for k in range(nb_eval):
             if env.current_player == player_opt.player:
                 move = player_opt.act(grid)
             else:
-                Valid_move_flag, move = DQN_player.act(grid, train_mode=True)
+                Valid_move_flag, move, loss = DQN_player.act(grid, train_mode=True)
             
             #if the move played by our player is not available, 
             #the game is stopped and the reward=-1
@@ -66,9 +66,11 @@ for k in range(nb_eval):
                 env.reset()
                 break
         
-        if not i%100:
-            print('epoch: '+str(i))
-    print("Average reward: {:.03f}".format(test_functions.test_DQN_policy(DQN_player))) 
+        # if not i%100:
+        #     print('epoch: '+str(i))
+    
+    Mopt = test_functions.test_DQN_policy(DQN_player)
+    print("Epoch: {:.02f}     Mopt: {:.03f}     Loss: {:.06f}".format(k, Mopt, loss)) 
     
 
    

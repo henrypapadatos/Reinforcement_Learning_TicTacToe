@@ -163,7 +163,7 @@ def test_DQN_policy(DQNplayer, expert_exploration_level=0):
                 if env.current_player == player_opt.player:
                     move = player_opt.act(grid)
                 else:
-                    Valid_move_flag, move = DQNplayer.act(grid, train_mode=True)
+                    Valid_move_flag, move, _ = DQNplayer.act(grid)
                 
                 #if the move played by our player is not available, 
                 #the game is stopped and the reward=-1
