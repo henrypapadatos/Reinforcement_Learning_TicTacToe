@@ -42,6 +42,7 @@ for k in range(nb_eval):
                 move = player_opt.act(grid)
             else:
                 Valid_move_flag, move, loss = DQN_player.act(grid, train_mode=True)
+                print("loss",loss)
             
             #if the move played by our player is not available, 
             #the game is stopped and the reward=-1

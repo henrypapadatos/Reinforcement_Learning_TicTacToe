@@ -131,7 +131,8 @@ class DQN_Player():
         
         self.addSequenceToBuffer(state)
 
-        QValues = self.model(state.view(-1))
+        with torch.no_grad():
+            QValues = self.model(state.view(-1))
         
         if train_mode:
             self.train_model()
@@ -183,14 +184,19 @@ class DQN_Player():
 
 
 class newDQN_Player():
-    def __init__(self,exploration_level = 0.3, player='X'):
+    def __init__(self,exploration_level = 0.3, player='X',decreasing_exploration_rate= 1, decreasing_exploration_flag = False):
         self.buffer = []
         self.exploration_level= exploration_level
+        self.decreasing_exploration_rate = decreasing_exploration_rate
+        self.decreasing_exploration_flag = decreasing_exploration_flag
+        self.epsilon_min = 0.1
+        self.epsilon_max = 0.8
+        self.game_number = 0
         self.last_state = None
         self.last_action = None
         self.reward = 0
-        self.lr = 5e-4
-        self.batch_size = 64
+        self.lr = 1e-4#5e-4
+        self.batch_size = 1
         self.update_target_rate = 500
         self.update_counter = 0
         self.discount_factor = 0.99
@@ -203,8 +209,8 @@ class newDQN_Player():
                                    nn.Linear(128, 9, bias=True))
         self.target = copy.deepcopy(self.model)
         self.optimizer = torch.optim.Adam(self.model.parameters(), self.lr)
-        self.criterion = nn.HuberLoss()
-        #self.criterion = nn.SmoothL1Loss()
+        #self.criterion = nn.HuberLoss()
+        self.criterion = nn.SmoothL1Loss()
         
         if (player != 'X') and (player != 'O'):
             raise ValueError ("Wrong player type.")
@@ -221,6 +227,21 @@ class newDQN_Player():
     
     def set_exploration_level(self, exploration_level):
         self.exploration_level = exploration_level
+    
+    def set_decreasing_exploration_rate(self, decreasing_exploration_rate):
+        self.decreasing_exploration_rate = decreasing_exploration_rate
+    
+    def compute_exploration_level(self):
+        """
+        Compute the learning rate in the case of decreasing_exploration_flag=True
+        lr = max(epsilon_min, epsilon_max*(1-game_number/decreasing_exploration_rate))
+     
+        Returns
+        -------
+        None.
+
+        """
+        self.exploration_level = max((self.epsilon_min, self.epsilon_max*(1-self.game_number/self.decreasing_exploration_rate)))
         
     def is_action_valid(self,action, state):
         i = int(action / 3)
@@ -261,10 +282,10 @@ class newDQN_Player():
     
     def create_batch(self):
         temp_batch = random.sample(self.buffer, k = self.batch_size)
-        state = torch.empty((64,18))
-        action = torch.empty((64,1))
-        reward = torch.empty((64,1))
-        next_state = torch.empty((64,18))
+        state = torch.empty((self.batch_size,18))
+        action = torch.empty((self.batch_size,1))
+        reward = torch.empty((self.batch_size,1))
+        next_state = torch.empty((self.batch_size,18))
         
         for i in range(len(temp_batch)):
             state[i] = temp_batch[i]['state'].view(-1)
@@ -278,7 +299,8 @@ class newDQN_Player():
         
         #If the buffer has not 64 elements yet, we don't train
         if len(self.buffer)<self.batch_size:
-            return
+            loss = 0
+            return loss
         
         state, action, reward, next_state = self.create_batch()
         
@@ -323,6 +345,10 @@ class newDQN_Player():
             if self.update_counter == 500:
                 self.define_target()
                 self.update_counter = 0
+
+        #Compute the exploration_level in the case of decreasing_exploration_flag=True
+        if self.decreasing_exploration_flag:
+            self.compute_exploration_level()
         
         #in this case, we explore. the action is sampled randomly from available actions
         if train_mode and random.random()<self.exploration_level:
@@ -339,6 +365,7 @@ class newDQN_Player():
             self.last_action = action
             self.last_state = state
             self.update_counter+=1
+            self.game_number+=1
         else:
             loss = 0
             
