@@ -60,13 +60,21 @@ class QLearningPlayer():
         
         self.states[key] = QValues
             
-    def last_update(self,reward):
+    def last_update(self,reward, train_mode=False):
         self.reward = reward
+        
+        #Compute the exploration_level in the case of decreasing_exploration_flag=True
+        if self.decreasing_exploration_flag:
+            self.compute_exploration_level()
+            
         self.update_QValues(0)
         
         self.reward = 0
         self.last_action=None
         self.last_state=None
+        
+        if train_mode:
+            self.game_number+=1
 
             
     def update_QValues(self, next_max_QValues):
@@ -155,12 +163,6 @@ class QLearningSelf_Player():
         self.decreasing_exploration_rate = decreasing_exploration_rate
         self.decreasing_exploration_flag = decreasing_exploration_flag
 
-    # def set_player(self, player):
-    #     if (player != 'X') and (player != 'O'):
-    #         raise ValueError ("Wrong player type.")
-    #     else:
-    #         self.player = player
-
     
     def set_decreasing_exploration_rate(self, decreasing_exploration_rate):
         self.decreasing_exploration_rate = decreasing_exploration_rate
@@ -187,8 +189,14 @@ class QLearningSelf_Player():
         
         self.states[key] = QValues
             
-    def last_update(self,reward,player):
+    def last_update(self,reward,player, train_mode=False):
         self.reward = reward
+        
+        #Compute the exploration_level in the case of decreasing_exploration_flag=True
+        if self.decreasing_exploration_flag:
+            self.compute_exploration_level()
+    
+        
         self.update_QValues(0,player)
         if player == 'O':
             self.last_action_o=None
@@ -199,7 +207,8 @@ class QLearningSelf_Player():
 
         self.reward = 0
        
-
+        if train_mode:
+            self.game_number+=1
             
     def update_QValues(self, next_max_QValues,player):
         
